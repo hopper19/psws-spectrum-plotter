@@ -1,59 +1,27 @@
 # DRF Spectrum Plotter
-# Author: W. Engelke, AB4EJ, University of Alabama
+# Authors: W. Engelke, AB4EJ, University of Alabama
+#           Cuong Nguyen, KC3UAX, The University of Scranton
 
 import matplotlib.pyplot as plt
 import numpy as np
 import digital_rf as drf
+import maidenhead
 from datetime import datetime
 import datetime
 from datetime import timezone
 import math
 import os, tempfile
 
-def to_grid(dec_lat, dec_lon): # this routine from github/laemmy, written by Walter Underwood K6WRU
-    upper = 'ABCDEFGHIJKLMNOPQRSTUVWX'
-    lower = 'abcdefghijklmnopqrstuvwx'
-    # if not (-180<=dec_lon<180):
-    #     sys.stderr.write('longitude must be -180<=lon<180, given %f\n'%dec_lon)
-    #     sys.exit(32)
-    # if not (-90<=dec_lat<90):
-    #     sys.stderr.write('latitude must be -90<=lat<90, given %f\n'%dec_lat)
-    #     sys.exit(33) # can't handle north pole, sorry, [A-R]
-
-    adj_lat = dec_lat + 90.0
-    adj_lon = dec_lon + 180.0
-
-    grid_lat_sq = upper[int(adj_lat/10)];
-    grid_lon_sq = upper[int(adj_lon/20)];
-
-    grid_lat_field = str(int(adj_lat%10))
-    grid_lon_field = str(int((adj_lon/2)%10))
-
-    adj_lat_remainder = (adj_lat - int(adj_lat)) * 60
-    adj_lon_remainder = ((adj_lon) - int(adj_lon/2)*2) * 60
-
-    grid_lat_subsq = lower[int(adj_lat_remainder/2.5)]
-    grid_lon_subsq = lower[int(adj_lon_remainder/5)]
-
-    return grid_lon_sq + grid_lat_sq + grid_lon_field + grid_lat_field + grid_lon_subsq + grid_lat_subsq
-
 plt.style.use('_mpl-gallery-nogrid')
 maidenheadGrid = 'EN91'
 # plot
 fig, ax = plt.subplots()
-#dataDate = '2021-10-05'
-#dataDir = "D:\\share\\AB4EJ"
-#dataDir = "C:\\Users\\bengelke\\Box\\share\\Grape_DRF_spectrum_data\\AD0RR"
 dataDir = "OBS2023-06-26"
 metadata_dir = dataDir + '\ch0\metadata'
-
-#dataDir = "D:\grape_test\hdf"
 
 do = drf.DigitalRFReader(dataDir)
 s, e = do.get_bounds('ch0')
 
-#print("Data avail. starting ", datetime.datetime.fromtimestamp(s/10))
-#print("   thru ", datetime.datetime.fromtimestamp(e/10))
 
 print("Plot spectrum for what date?  (YYYY-MM-DD)")
 t =input()
@@ -64,9 +32,6 @@ timestamp = requestTime.replace(tzinfo=timezone.utc).timestamp() * 10
 
 s = int(timestamp)
 print("time stamp ",s)
-
-#print("metadata stime?")
-#stime = int(input())
 
 freqList = [0]
 theLatitude = 0
@@ -106,7 +71,7 @@ try:
         theLongitude = data_dict[key]
         print("Longitude: ",theLongitude)
 
-    maidenheadGrid = to_grid(theLatitude, theLongitude)
+    maidenheadGrid = maidenhead.to_maiden(theLatitude, theLongitude)
     
 except IOError:
     print("IO Error; metadata not found at " + metadata_dir)
@@ -242,9 +207,5 @@ print("Average amplitude: ",avgAmplitude)
 #plt.subplot(3,1,3)
 #ax[2].imshow(D, cmap =plt.get_cmap('inferno'), interpolation ='nearest', vmin=0,vmax=(avgAmplitude*1.5))
 
-plt.savefig('D:\\images\\DRF_plots\\' + t + '_' + maidenheadGrid + '.jpg')
+plt.savefig('images/DRF_plots/' + t + '_' + maidenheadGrid + '.jpg')
 plt.show()
-
-
-
-
